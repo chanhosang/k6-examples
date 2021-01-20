@@ -10,6 +10,7 @@ lerna-debug.log*
 reports
 html-report
 summary-export.json
+report.html
 
 # Dependency directories
 node_modules/

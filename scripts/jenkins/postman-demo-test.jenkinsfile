@@ -1,0 +1,135 @@
+/*
+ ============================================================================
+ This Jenkins declarative pipeline (using docker pipeline plugin) defines the
+ internal REST API (JSON) functional testing by using newman (a command line tool for Postman).
+
+ The internal REST API allows web applications and services to interact with resources stored in a web server via HTTP protocol.
+ Althought it is not 100% simulation of actual web interaction, but still very high chances in identifying the possible
+ functionility problems much earlier than actual web interaction (time-costly).
+
+ Hence, it is definitely worth the effort to invest in REST API functional testing and integrate to the delivery pipeline.
+ ============================================================================
+
+ Pre-requisite:
+- Installed the following jenkins plugins:
+	* https://wiki.jenkins.io/display/JENKINS/Git+Plugin
+    * https://wiki.jenkins.io/display/JENKINS/Docker+Plugin
+	* http://wiki.jenkins-ci.org/display/JENKINS/HTML+Publisher+Plugin
+*/
+
+
+properties(
+  [
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10'))
+  ]
+)
+
+
+pipeline {
+
+    agent {
+        label 'master'
+    }
+
+    environment {
+        def postman_collection  = "k6-demo-crocodiles.postman_collection.json"
+        def newman_html_reporter  = "newman-reporter-htmlextra" // newman-reporter-html
+    }
+
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+    }
+	stages {
+
+
+        stage('Check API Services Availability') {
+            steps {
+                script {
+                    def target_url = "https://test-api.k6.io/"
+					curl_result = sh (returnStdout: true, script: "timeout 3s  curl -Is -X GET ${target_url} | head -n 1").trim()
+                    echo "curl_result: ${curl_result}"
+                    if ("${curl_result}" ==~ /.*200.*/) {
+						echo "The service is up and running..."
+					} else {
+						error("The service is down.")
+					}
+				}
+            }
+		}
+
+        stage('Run Postman') {
+            agent {
+                docker {
+                    image 'postman/newman:latest'
+                    label 'master'
+                    args '--entrypoint=' //args '-u root --entrypoint=\'/bin/sh\''
+                }
+            }
+            steps {
+
+                script {
+                    // If the folder is specified, include --folder argument
+                    def reporter_args = ""
+
+                    // Install JS tools...
+                    sh """
+                    /bin/sh
+                    nodejs -v
+                    npm -v
+                    newman -v
+                    """
+
+                    // Choose reporter plugin
+                    sh """
+                    npm i -g ${newman_html_reporter}
+                    """
+
+                    if (newman_html_reporter == "newman-reporter-htmlextra"){
+                        reporter_args = "--reporters cli,junit,htmlextra --reporter-junit-export=report/newman-report.xml --reporter-htmlextra-export=report/newman-report-extra.html"
+                    } else {
+                        reporter_args = "--reporters cli,junit,html --reporter-junit-export=report/newman-report.xml --reporter-html-export=report/newman-report.html"
+                    }
+
+                    dir('scripts/postman'){
+                        // Sometimes, using newman to run GET request might failed with ESOCKETTIMEDOUT
+                        // Therefore, include timeout-request argument to prevent the test got stuck forever.
+
+                        // The newman-reporter-htmlextra provides more comprehensive information from the test run
+                        // For more info, refer to https://www.npmjs.com/package/newman-reporter-htmlextra
+                        // However, the newman run will choose newman-reporter-htmlextra over newman-reporter-html instead of having both reports.
+
+                        // The large view repsonse is too large to be included in htmlextra report.
+                        sh """
+                        /bin/sh
+                        newman run \"collections/${postman_collection}\" \
+                        --env-var username=TestUser \
+                        --env-var username=SuperCroc2020 \
+                        --timeout-request 10000 \
+                        -k \
+                        ${reporter_args}
+                        """
+                    }
+                }
+            }
+            post {
+                always {
+                    dir('scripts/postman'){
+                        archiveArtifacts artifacts: "report/*xml, report/*", fingerprint: true
+                        junit allowEmptyResults: true, testResults: 'report/*xml'
+                        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'report', reportFiles: '*.html', reportName: 'HTML Report', reportTitles: ''])
+                    }
+                    cleanWs()
+                }
+            }
+		}
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+
+}
+

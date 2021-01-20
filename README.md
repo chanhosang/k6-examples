@@ -1,5 +1,7 @@
 # k6-examples
 
+Here are some examples on how to write and run performance test by using [k6](https://k6.io/).
+
 ## Prerequisites
 
 * [k6](https://k6.io/docs/getting-started/installation), an open-source load testing tool for testing the performance of APIs, microservices, and websites.
@@ -18,6 +20,10 @@ k6 run loadtests/demo.js
 Or, you can specify the virtual users and iterations:
 ```
 k6 run loadtests/demo.js -u 1 -i 1
+```
+To run a sample load test:
+```
+k6 run loadtests/load-testing.js
 ```
 
 **NOTE**

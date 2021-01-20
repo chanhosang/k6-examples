@@ -1,0 +1,13 @@
+{
+  "name": "k6-examples",
+  "version": "1.0.0",
+  "description": "Starter template for writing JavaScript tests for K6",
+  "dependencies": {
+    "k6-html-reporter": "^0.0.6",
+    "postman-to-k6": "^1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

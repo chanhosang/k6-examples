@@ -1,0 +1,249 @@
+{
+	"info": {
+		"_postman_id": "d033747c-e21b-490e-82c4-2b102b2be00f",
+		"name": "k6-demo-crocodiles",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Login",
+			"item": [
+				{
+					"name": "POST /auth/token/login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var jsonData = pm.response.json()\r",
+									"pm.environment.set(\"accessToken\", jsonData.access);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\r\n   \"username\" : \"TestUser\",\r\n   \"password\" : \"SuperCroc2020\"\r\n\r\n }"
+						},
+						"url": {
+							"raw": "{{baseURL}}/auth/token/login/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"auth",
+								"token",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02. Navigate to Home Page",
+			"item": [
+				{
+					"name": "GET /my/crocodiles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"retrieved crocodiles is greater than 0\", function () {\r",
+									"    console.log(\"jsonData.length:\"+jsonData.length);\r",
+									"    pm.expect(jsonData.length).to.greaterThan(0);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/my/crocodiles/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"my",
+								"crocodiles",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03. Navigate to Invalid Page",
+			"item": [
+				{
+					"name": "GET /my/crocodiles/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/my/crocodiles/a",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"my",
+								"crocodiles",
+								"a"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "04. Navigate to My Page with Query Paramaters",
+			"item": [
+				{
+					"name": "GET /my/crocodiles?sex={sex}&age={age}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/my/crocodiles?sex=M&age=2",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"my",
+								"crocodiles"
+							],
+							"query": [
+								{
+									"key": "sex",
+									"value": "M"
+								},
+								{
+									"key": "age",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exe": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://test-api.k6.io"
+		}
+	]
+}
