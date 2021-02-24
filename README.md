@@ -11,6 +11,8 @@ Here are some examples on how to write and run performance test by using [k6](ht
     ```
 * [InfluxDB + Grafana](https://k6.io/docs/results-visualization/influxdb-+-grafana), for visualization of your k6 metrics.
 
+    The Grafana Dashboard is published here: https://grafana.com/grafana/dashboards/13719/
+
 ## How to Run?
 
 To run a demo test:
