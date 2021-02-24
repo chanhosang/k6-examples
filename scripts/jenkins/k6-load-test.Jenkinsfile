@@ -32,7 +32,7 @@ pipeline {
     options {
         disableConcurrentBuilds()
         timestamps()
-        // skipDefaultCheckout()
+        skipDefaultCheckout()
     }
 
     environment {
@@ -46,19 +46,20 @@ pipeline {
 
         stage('Preparation') {
             steps {
-                // // If option is enabled with skipDefaultCheckout()
-                // script {
-                //     def gitCredentialsId = 'hosang.chan'
-                //     REPO_BRANCH = 'main'
-                //     REPO_URL = 'git@github.com:<repository>/k6-examples.git'
-                //     git branch: REPO_BRANCH, credentialsId: gitCredentialsId, url: REPO_URL
-                // }
+                // Enabled skipDefaultCheckout()
+                script {
+                    // sh 'printenv'
+                    echo "git url: ${scm.userRemoteConfigs[0].url}"
+                    echo "git branch: ${scm.branches[0].name}"
+
+                    // checkout from version control configured in pipeline job
+                    checkout scm // git branch: 'main', credentialsId: '<credentialsId>', url: '<repositoryUrl>'
+                }
 
                 stash name: 'source', includes: 'loadtests/**'
                 stash name: 'utility', includes: 'package.json, generate-html-report.js'
             }
 		}
-
 
         stage('Run Load Testing') {
             agent {
